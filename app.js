@@ -1,348 +1,827 @@
-﻿const scene = document.querySelector('#scene');
-const experience = document.querySelector('#experience');
-const identity = document.querySelector('#identity');
-const title = document.querySelector('#title');
-const task = document.querySelector('#task');
-const cloud = document.querySelector('#cloud-text');
-const steps = [...document.querySelectorAll('.progress span')];
-const primary = document.querySelector('#primary');
-const secondary = document.querySelector('#secondary');
-const detail = document.querySelector('#detail');
-const panel = document.querySelector('#panel');
-const bot = document.querySelector('#bot');
-const prop = document.querySelector('#stage-prop');
-const tabs = [...document.querySelectorAll('.agent-tab')];
-const themeToggle = document.querySelector('#theme-toggle');
-const themeSymbol = document.querySelector('#theme-symbol');
+/* ==========================================================================
+   ZIKI ATELIER — COMPREHENSIVE JAVASCRIPT CONTROLLER
+   Delightful, Whimsical Human-Agent Interaction for Ziki
+   ========================================================================== */
 
-function setTheme(theme) {
-  const dark = theme === 'dark';
-  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-  themeToggle.setAttribute('aria-pressed', String(dark));
-  themeToggle.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
-  themeSymbol.textContent = dark ? '☾' : '☼';
-  document.querySelector('meta[name="theme-color"]').content = dark ? '#101a2b' : '#f8f9f5';
-  try { localStorage.setItem('ziki-theme', dark ? 'dark' : 'light'); } catch {}
-}
+(function () {
+  'use strict';
 
-let savedTheme = 'light';
-try { savedTheme = localStorage.getItem('ziki-theme') || 'light'; } catch {}
-setTheme(savedTheme);
-themeToggle.addEventListener('click', () => {
-  setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
-});
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => [...document.querySelectorAll(sel)];
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-const agents = {
-  atlas: {
-    id: 'atlas', name: 'Atlas', role: 'Contributor', task: 'Fix login timeout', time: '30 min',
-    state: 'asking', workIndex: 0, timer: null, planNote: '', revising: false,
-    plan: ['Find', 'Patch', 'Check'],
-    work: [
-      ['Finding the bug', 'Checking the timeout', 'looking closely'],
-      ['Making the fix', 'Patching token refresh', 'making progress'],
-      ['Checking it', 'Running 47 checks', 'almost there']
-    ],
-    proof: ['47 checks passed', 'Token refresh no longer times out.'],
-    done: 'Login timeout fixed', accept: 'Accept fix'
-  },
-  nova: {
-    id: 'nova', name: 'Nova', role: 'Contributor', task: 'Fix mobile menu', time: '20 min',
-    state: 'working', workIndex: 0, timer: null, planNote: '', revising: false,
-    plan: ['Reproduce', 'Fix', 'Check'],
-    work: [
-      ['Finding the glitch', 'Opening the mobile menu', 'investigating'],
-      ['Making the fix', 'Tuning the menu', 'making progress'],
-      ['Checking it', 'Running 18 checks', 'almost there']
-    ],
-    proof: ['18 checks passed', 'The mobile menu opens and closes correctly.'],
-    done: 'Mobile menu fixed', accept: 'Accept fix'
-  },
-  moss: {
-    id: 'moss', name: 'Moss', role: 'Reviewer', task: 'Review retry logic', time: '15 min',
-    state: 'review', workIndex: 0, timer: null, planNote: '', revising: false,
-    plan: ['Inspect', 'Verify', 'Report'],
-    work: [
-      ['Reading the change', 'Inspecting retry logic', 'looking closely'],
-      ['Trying edge cases', 'Checking failed requests', 'making progress'],
-      ['Writing a verdict', 'Running 12 checks', 'almost there']
-    ],
-    proof: ['12 checks passed', 'Retries stop safely after three attempts.'],
-    done: 'Review accepted', accept: 'Accept review'
-  }
-};
-
-let activeId = 'atlas';
-let panelKind = '';
-let boopTimer = null;
-let switchTimer = null;
-const statusLabels = { asking: 'Needs OK', working: 'Working', paused: 'Paused', review: 'Review', done: 'Done' };
-const statusProps = { asking: '✉', working: '⚙', paused: '☾', review: '✓', done: '✿' };
-const activeAgent = () => agents[activeId];
-
-function closePanel() {
-  panel.hidden = true;
-  panel.replaceChildren();
-  panelKind = '';
-  detail.setAttribute('aria-expanded', 'false');
-}
-
-function updateTabs() {
-  tabs.forEach(tab => {
-    const agent = agents[tab.dataset.agent];
-    const selected = agent.id === activeId;
-    tab.dataset.state = agent.state;
-    tab.classList.toggle('is-active', selected);
-    tab.setAttribute('aria-pressed', String(selected));
-    tab.setAttribute('aria-label', agent.name + ', ' + statusLabels[agent.state]);
-    tab.querySelector('.tab-status').textContent = statusLabels[agent.state];
-  });
-}
-
-function setProgress(index) {
-  steps.forEach((step, i) => {
-    step.classList.toggle('done', i < index);
-    step.classList.toggle('current', i === index && index < steps.length);
-  });
-}
-
-function render() {
-  const agent = activeAgent();
-  clearTimeout(boopTimer);
-  scene.classList.remove('is-petted');
-  closePanel();
-  scene.dataset.agent = activeId;
-  scene.dataset.state = agent.state;
-  experience.dataset.agent = activeId;
-  identity.textContent = agent.name.toUpperCase() + ' · ' + agent.role.toUpperCase();
-  bot.setAttribute('aria-label', 'Tap ' + agent.name + ' for a little surprise');
-  prop.textContent = statusProps[agent.state];
-  secondary.hidden = false;
-  detail.hidden = false;
-
-  if (agent.state === 'asking') {
-    title.textContent = agent.revising ? 'Ready to revise' : 'Needs your OK';
-    task.textContent = agent.task + (agent.planNote ? ' · plan changed' : ' · ' + agent.time);
-    cloud.textContent = agent.revising ? 'waiting for direction' : 'waiting for you';
-    primary.textContent = 'Go ahead';
-    secondary.textContent = 'Change plan';
-    detail.textContent = 'What will you do?';
-    setProgress(0);
-  } else if (agent.state === 'working') {
-    const stage = agent.work[agent.workIndex];
-    title.textContent = stage[0];
-    task.textContent = stage[1];
-    cloud.textContent = stage[2];
-    primary.textContent = 'Pause';
-    secondary.textContent = 'Ask ' + agent.name;
-    detail.textContent = 'See activity';
-    setProgress(1);
-  } else if (agent.state === 'paused') {
-    title.textContent = 'Taking a break';
-    task.textContent = agent.work[agent.workIndex][1];
-    cloud.textContent = 'paused by you';
-    primary.textContent = 'Resume';
-    secondary.textContent = 'Ask ' + agent.name;
-    detail.textContent = 'See activity';
-    setProgress(1);
-  } else if (agent.state === 'review') {
-    title.textContent = 'Ready for you';
-    task.textContent = agent.proof[0];
-    cloud.textContent = 'waiting for review';
-    primary.textContent = agent.accept;
-    secondary.textContent = 'Send back';
-    detail.textContent = 'See proof';
-    setProgress(2);
-  } else {
-    title.textContent = 'All done!';
-    task.textContent = agent.done;
-    cloud.textContent = 'happy to help';
-    primary.textContent = 'Try again';
-    secondary.hidden = true;
-    detail.hidden = true;
-    setProgress(4);
-  }
-  updateTabs();
-}
-
-function startWork(agent) {
-  clearInterval(agent.timer);
-  agent.timer = window.setInterval(() => {
-    if (agent.state !== 'working') return;
-    agent.workIndex += 1;
-    if (agent.workIndex >= agent.work.length) {
-      clearInterval(agent.timer);
-      agent.timer = null;
-      agent.state = 'review';
+  // --- Companions Data Model ---
+  const companions = {
+    atlas: {
+      id: 'atlas',
+      name: 'Atlas',
+      role: 'The Builder',
+      roleType: 'Contributor',
+      initials: 'AT',
+      avatarClass: 'avatar-atlas',
+      state: 'asking', // 'asking' | 'working' | 'review' | 'paused' | 'done'
+      workIndex: 0,
+      timer: null,
+      task: 'Fix login timeout on mobile web (#42)',
+      eta: '~30 min',
+      story:
+        'Users on slow mobile 3G networks experience an abrupt session timeout after 30 seconds. I drafted a blueprint to introduce a smart 5-second background refresh leeway with zero UI blocking.',
+      compBefore: 'Hard 30s timeout failure',
+      compAfter: 'Seamless background refresh buffer',
+      plan: ['Inspect token lifecycle', 'Add 5s refresh leeway', 'Run 47 mobile checks'],
+      pinnedNotes: [],
+      autonomy: 'partner',
+      key: 'z1k1_At99Lx-441a'
+    },
+    nova: {
+      id: 'nova',
+      name: 'Nova',
+      role: 'The Inspector',
+      roleType: 'Reviewer',
+      initials: 'NO',
+      avatarClass: 'avatar-nova',
+      state: 'working',
+      workIndex: 0,
+      timer: null,
+      task: 'Tuning retry logic & transient backoff (#104)',
+      eta: '~20 min',
+      story:
+        'Auditing the exponential backoff algorithm to ensure retry storms do not overwhelm backend services during brief outages.',
+      workStream: [
+        ['Simulating network jitter', 'Testing transient connection drops across 3 retry attempts', 'investigating'],
+        ['Validating socket teardown', 'Ensuring no hanging socket leaks on 503 errors', 'making progress'],
+        ['Running regression suite', 'Executing 18 edge-case network checks', 'almost there']
+      ],
+      plan: ['Inspect algorithm', 'Simulate jitter', 'Verify 3 attempts ceiling'],
+      pinnedNotes: [],
+      autonomy: 'partner',
+      key: 'z1k1_2X2mW-198f'
+    },
+    luna: {
+      id: 'luna',
+      name: 'Luna',
+      role: 'The Sentinel',
+      roleType: 'Reviewer',
+      initials: 'LU',
+      avatarClass: 'avatar-luna',
+      state: 'review',
+      workIndex: 0,
+      timer: null,
+      task: 'Session storage security audit (#188)',
+      eta: '~15 min',
+      story:
+        'I wrapped up the comprehensive security audit! 12 security verification checks passed with flying colors. Zero plaintext credentials in browser storage, and HttpOnly/SameSite flags are now strictly enforced.',
+      checksProof: '12 security checks passed · Zero plain text secrets in storage',
+      plan: ['Scan storage keys', 'Check XSS exposure', 'Audit cookie flags'],
+      pinnedNotes: [],
+      autonomy: 'partner',
+      key: 'z1k1_JH7-pJ-882b'
+    },
+    dexter: {
+      id: 'dexter',
+      name: 'Dexter',
+      role: 'The Archivist',
+      roleType: 'Triager',
+      initials: 'DE',
+      avatarClass: 'avatar-dexter',
+      state: 'paused',
+      workIndex: 0,
+      timer: null,
+      task: 'Clustering duplicate bug reports (#91)',
+      eta: '~25 min',
+      story: 'Parsed 38 customer issue reports and grouped 5 duplicate bug clusters with cosine text similarity > 0.92.',
+      plan: ['Index issues', 'Compare similarities', 'Group duplicates'],
+      pinnedNotes: [],
+      autonomy: 'partner',
+      key: 'z1k1_Woq1Z0-671c'
+    },
+    caius: {
+      id: 'caius',
+      name: 'Caius',
+      role: 'The Architect',
+      roleType: 'Reviewer',
+      initials: 'CA',
+      avatarClass: 'avatar-caius',
+      state: 'done',
+      workIndex: 0,
+      timer: null,
+      task: 'Zero-downtime database migration PR #142',
+      eta: '~10 min',
+      story: 'Executed schema migration dry-run on staging replica with concurrent index creation. Zero exclusive table locks.',
+      plan: ['Dry run migration', 'Check table locks', 'Verify rollback'],
+      pinnedNotes: [],
+      autonomy: 'partner',
+      key: 'z1k1_Us29Jq-335d'
     }
-    if (agent.id === activeId) render();
-    else updateTabs();
-  }, 3400);
-}
-
-function showPanel(kind, html) {
-  if (panelKind === kind && !panel.hidden) {
-    closePanel();
-    return false;
-  }
-  panelKind = kind;
-  panel.innerHTML = html;
-  panel.hidden = false;
-  detail.setAttribute('aria-expanded', String(['plan', 'activity', 'proof'].includes(kind)));
-  panel.setAttribute('aria-label', kind === 'plan' ? 'Agent plan' : kind === 'activity' ? 'Agent activity' : kind === 'proof' ? 'Work proof' : 'Agent response');
-  return true;
-}
-
-function changePlan() {
-  const agent = activeAgent();
-  if (!showPanel('change', '<label for="edit">Tell ' + agent.name + ' what to change</label><textarea id="edit" placeholder="e.g. Check mobile too"></textarea><div class="panel-row"><button id="send" type="button">Send change</button><button id="cancel" type="button">Cancel</button></div>')) return;
-  const input = document.querySelector('#edit');
-  input.focus();
-  document.querySelector('#send').onclick = () => {
-    const value = input.value.trim();
-    if (!value) return input.focus();
-    agent.planNote = value;
-    agent.revising = false;
-    closePanel();
-    cloud.textContent = 'plan updated';
-    task.textContent = agent.task + ' · plan changed';
   };
-  document.querySelector('#cancel').onclick = closePanel;
-}
 
-function askAgent() {
-  const agent = activeAgent();
-  if (!showPanel('question', '<label for="ask">Ask ' + agent.name + '</label><input id="ask" placeholder="What do you need to know?"><div class="panel-row"><button id="send" type="button">Ask</button><button id="cancel" type="button">Cancel</button></div><p class="reply" id="reply" hidden></p>')) return;
-  const input = document.querySelector('#ask');
-  const reply = document.querySelector('#reply');
-  input.focus();
-  const answer = () => {
-    const question = input.value.trim().toLowerCase();
-    if (!question) return input.focus();
-    reply.textContent = question.includes('time') ? 'About ' + agent.time + '. I will ask before changing anything else.' :
-      question.includes('risk') || question.includes('safe') ? 'I will check the result before you review it.' :
-      question.includes('plan') ? 'I will ' + agent.plan.join(', ').toLowerCase() + '.' :
-      agent.state === 'review' ? agent.proof[0] + '. ' + agent.proof[1] :
-      agent.state === 'paused' ? 'I am paused. You can resume me when ready.' :
-      'I am working on ' + agent.task.toLowerCase() + '.';
-    reply.hidden = false;
-  };
-  document.querySelector('#send').onclick = answer;
-  input.onkeydown = event => { if (event.key === 'Enter') answer(); };
-  document.querySelector('#cancel').onclick = closePanel;
-}
+  // --- Audit Log History ---
+  const auditLogs = [
+    { time: '10 mins ago', agent: 'Caius', action: 'Merged PR #142 (Zero-downtime migration)', hash: '0x8f3c..b12a' },
+    { time: '25 mins ago', agent: 'Luna', action: 'Completed audit: 12/12 security checks passed', hash: '0x4a1e..99f0' },
+    { time: '1 hour ago', agent: 'Nova', action: 'Initiated retry backoff jitter test suite', hash: '0x19bc..02dd' },
+    { time: '2 hours ago', agent: 'Atlas', action: 'Generated Blueprint #42 (Mobile timeout leeway)', hash: '0xaa71..63e8' },
+    { time: '4 hours ago', agent: 'Dexter', action: 'Grouped 5 duplicate issues into single cluster', hash: '0x5e22..88ca' }
+  ];
 
-primary.onclick = () => {
-  const agent = activeAgent();
-  if (agent.state === 'asking') {
-    agent.state = 'working';
-    agent.workIndex = 0;
-    agent.revising = false;
-    render();
-    startWork(agent);
-  } else if (agent.state === 'working') {
-    agent.state = 'paused';
-    clearInterval(agent.timer);
-    agent.timer = null;
-    render();
-  } else if (agent.state === 'paused') {
-    agent.state = 'working';
-    render();
-    startWork(agent);
-  } else if (agent.state === 'review') {
-    agent.state = 'done';
-    render();
-  } else {
-    agent.state = 'asking';
-    agent.workIndex = 0;
-    agent.planNote = '';
-    agent.revising = false;
-    render();
-  }
-};
+  let activeId = 'atlas';
+  let userPoints = 11245;
+  let currentFilter = 'all';
+  let searchQuery = '';
+  let boopTimer = null;
+  let switchTimer = null;
 
-secondary.onclick = () => {
-  const agent = activeAgent();
-  if (agent.state === 'asking') return changePlan();
-  if (agent.state === 'review') {
-    agent.state = 'asking';
-    agent.workIndex = 0;
-    agent.revising = true;
-    render();
-    return changePlan();
-  }
-  if (agent.state === 'working') {
-    agent.state = 'paused';
-    clearInterval(agent.timer);
-    agent.timer = null;
-    render();
-  }
-  askAgent();
-};
+  const activeCompanion = () => companions[activeId] || Object.values(companions)[0];
 
-detail.onclick = () => {
-  const agent = activeAgent();
-  if (agent.state === 'asking') {
-    const flow = agent.plan.map(part => '<span>' + part + '</span>').join('<i>→</i>');
-    if (!showPanel('plan', '<div class="flow">' + flow + '</div>')) return;
-    if (agent.planNote) {
-      const note = document.createElement('p');
-      note.style.marginTop = '12px';
-      note.textContent = 'Also: ' + agent.planNote;
-      panel.append(note);
+  // --- Confetti Particles ---
+  function burstConfetti(x, y, count = 35) {
+    if (reduce) return;
+    const colors = ['#3478f6', '#8bc8ff', '#2163e0', '#ffffff', '#10b981', '#f59e0b', '#ec4899'];
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('i');
+      p.className = 'confetti-particle';
+      p.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 7px; height: 7px; border-radius: 2px;
+        background: ${colors[i % colors.length]}; pointer-events: none; z-index: 120;
+      `;
+      if (i % 3 === 0) p.style.borderRadius = '50%';
+      document.body.appendChild(p);
+
+      const angle = Math.random() * Math.PI * 2;
+      const velocity = 80 + Math.random() * 200;
+      p.animate(
+        [
+          { transform: `translate(${x}px, ${y}px)`, opacity: 1 },
+          {
+            transform: `translate(${x + Math.cos(angle) * velocity}px, ${
+              y + Math.sin(angle) * velocity + 150
+            }px) rotate(${Math.random() * 720}deg)`,
+            opacity: 0
+          }
+        ],
+        { duration: 900 + Math.random() * 600, easing: 'cubic-bezier(.2,.7,.4,1)' }
+      ).onfinish = () => p.remove();
     }
-    const row = document.createElement('div');
-    const askButton = document.createElement('button');
-    row.className = 'panel-row';
-    askButton.type = 'button';
-    askButton.textContent = 'Ask ' + agent.name;
-    askButton.onclick = askAgent;
-    row.append(askButton);
-    panel.append(row);
-  } else if (agent.state === 'review') {
-    showPanel('proof', '<p><strong>✓ ' + agent.proof[0] + '</strong></p><p>' + agent.proof[1] + '</p>');
-  } else {
-    const next = agent.work[agent.workIndex + 1]?.[1] || 'Your review';
-    showPanel('activity', '<p><strong>Now:</strong> ' + agent.work[agent.workIndex][1] + '</p><p>Next: ' + next + '</p>');
   }
-};
 
-tabs.forEach(tab => tab.addEventListener('click', () => {
-  if (tab.dataset.agent === activeId) return;
-  activeId = tab.dataset.agent;
-  render();
-  clearTimeout(switchTimer);
-  scene.classList.remove('switching');
-  void scene.offsetWidth;
-  scene.classList.add('switching');
-  switchTimer = setTimeout(() => scene.classList.remove('switching'), 440);
-}));
+  // --- Toast Shelf ---
+  function showToast(text, icon = '✨') {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `<span aria-hidden="true">${icon}</span><span>${text}</span>`;
+    $('#toast-shelf').appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(10px) scale(0.95)';
+      toast.style.transition = 'all 0.25s ease';
+      setTimeout(() => toast.remove(), 250);
+    }, 2800);
+  }
 
-bot.addEventListener('click', () => {
-  clearTimeout(boopTimer);
-  const previous = cloud.textContent;
-  scene.classList.remove('is-petted');
-  void scene.offsetWidth;
-  scene.classList.add('is-petted');
-  cloud.textContent = 'boop! ✨';
-  boopTimer = setTimeout(() => {
-    scene.classList.remove('is-petted');
-    if (cloud.textContent === 'boop! ✨') cloud.textContent = previous;
-  }, 1100);
-});
+  function awardPoints(pts, msg) {
+    userPoints += pts;
+    $('#user-points').textContent = userPoints.toLocaleString();
+    showToast(`+${pts} pts: ${msg}`, '🏆');
+  }
 
-if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  scene.addEventListener('pointermove', event => {
-    const box = bot.getBoundingClientRect();
-    const x = (event.clientX - box.left - box.width / 2) / box.width;
-    const y = (event.clientY - box.top - box.height / 2) / box.height;
-    bot.style.setProperty('--eye-x', Math.max(-3, Math.min(3, x * 7)) + 'px');
-    bot.style.setProperty('--eye-y', Math.max(-2, Math.min(2, y * 5)) + 'px');
+  // --- Theme Controller ---
+  function setTheme(theme) {
+    const isDark = theme === 'dark';
+    document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+    $('#theme-toggle').setAttribute('aria-pressed', String(isDark));
+    $('#theme-symbol').textContent = isDark ? '☾' : '☼';
+    try { localStorage.setItem('ziki-theme', isDark ? 'dark' : 'light'); } catch (e) {}
+  }
+
+  let savedTheme = 'light';
+  try { savedTheme = localStorage.getItem('ziki-theme') || 'light'; } catch (e) {}
+  setTheme(savedTheme);
+
+  $('#theme-toggle').addEventListener('click', () => {
+    setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
   });
-  scene.addEventListener('pointerleave', () => {
-    bot.style.setProperty('--eye-x', '0px');
-    bot.style.setProperty('--eye-y', '0px');
-  });
-}
 
-render();
-startWork(agents.nova);
+  // --- Render Meadow Grid ---
+  function renderMeadow() {
+    const grid = $('#meadow-grid');
+    const compList = Object.values(companions);
+
+    // Apply filters
+    const filtered = compList.filter((c) => {
+      const matchesRole = currentFilter === 'all' || c.roleType.toLowerCase() === currentFilter.toLowerCase();
+      const matchesSearch =
+        !searchQuery ||
+        c.name.toLowerCase().includes(searchQuery) ||
+        c.role.toLowerCase().includes(searchQuery) ||
+        c.roleType.toLowerCase().includes(searchQuery) ||
+        c.task.toLowerCase().includes(searchQuery);
+      return matchesRole && matchesSearch;
+    });
+
+    if (filtered.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column: 1 / -1; padding: 24px; text-align: center; color: var(--muted); font-size: 14px;">
+          No companions found matching "<strong>${searchQuery}</strong>". Try a different search!
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = filtered
+      .map((c) => {
+        const isSelected = c.id === activeId;
+        let badgeHtml = '';
+        let moodClass = 'mood-working';
+        let moodText = 'Building & Tuning';
+
+        if (c.state === 'asking') {
+          badgeHtml = `<div class="slot-badge-pulse" aria-hidden="true">✉</div>`;
+          moodClass = 'mood-urgent';
+          moodText = 'Needs Your Stamp!';
+        } else if (c.state === 'working') {
+          badgeHtml = `<div class="slot-badge-icon" aria-hidden="true">⚙</div>`;
+          moodClass = 'mood-working';
+          moodText = 'Building & Tuning';
+        } else if (c.state === 'review') {
+          badgeHtml = `<div class="slot-badge-icon ready" aria-hidden="true">🎁</div>`;
+          moodClass = 'mood-ready';
+          moodText = 'Gift Ready to Open!';
+        } else if (c.state === 'paused') {
+          badgeHtml = `<div class="slot-badge-icon" aria-hidden="true">☾</div>`;
+          moodClass = 'mood-paused';
+          moodText = 'Resting with Tea';
+        } else {
+          badgeHtml = `<div class="slot-badge-icon ready" aria-hidden="true">✿</div>`;
+          moodClass = 'mood-done';
+          moodText = 'Mission Celebrated';
+        }
+
+        return `
+          <button class="meadow-slot ${isSelected ? 'is-selected' : ''}" data-agent="${c.id}" role="tab" aria-selected="${isSelected}" type="button">
+            ${badgeHtml}
+            <div class="slot-avatar ${c.avatarClass || 'avatar-atlas'}">
+              <span class="slot-initials">${c.initials}</span>
+              <span class="mini-halo" aria-hidden="true"></span>
+            </div>
+            <div class="slot-info">
+              <span class="slot-name">${c.name}</span>
+              <span class="slot-role">${c.roleType}</span>
+              <span class="slot-mood ${moodClass}">${moodText}</span>
+            </div>
+          </button>
+        `;
+      })
+      .join('');
+
+    // Update Counts
+    const totalCount = compList.length;
+    $('#active-agents-count').textContent = totalCount;
+    const pendingCount = compList.filter((c) => c.state === 'asking').length;
+    const alertEl = $('#activity-alert-count');
+    if (alertEl) {
+      alertEl.textContent = pendingCount;
+      alertEl.style.display = pendingCount > 0 ? 'inline-grid' : 'none';
+    }
+  }
+
+  // --- Render Active Companion Workbench ---
+  function renderWorkbench() {
+    const c = activeCompanion();
+    clearTimeout(boopTimer);
+    $('#scene').classList.remove('is-petted');
+
+    // Top Workbench Bar
+    $('#wb-avatar').textContent = c.initials;
+    $('#wb-name').textContent = c.name;
+    $('#wb-role').textContent = `${c.role} · ${c.roleType}`;
+    $('#wb-task-desc').textContent = `Task: ${c.task}`;
+
+    // Update Autonomy Dial
+    $$('.dial-pill').forEach((pill) => {
+      const isLevel = pill.dataset.level === c.autonomy;
+      pill.classList.toggle('is-active', isLevel);
+      pill.setAttribute('aria-checked', String(isLevel));
+    });
+
+    // Update Bot Scene
+    $('#scene').dataset.agent = c.id;
+    $('#scene').dataset.state = c.state;
+    $('#bot').setAttribute('aria-label', `Tap ${c.name} for a friendly greeting`);
+    $('#stage-prop').textContent =
+      c.state === 'asking' ? '✉' : c.state === 'working' ? '⚙' : c.state === 'review' ? '🎁' : c.state === 'paused' ? '☾' : '✿';
+
+    // Thought Cloud Text
+    if (c.state === 'asking') {
+      $('#cloud-text').textContent = 'waiting for your stamp!';
+    } else if (c.state === 'working') {
+      const currentStep = c.workStream ? c.workStream[c.workIndex]?.[2] || 'building' : 'building';
+      $('#cloud-text').textContent = currentStep;
+    } else if (c.state === 'review') {
+      $('#cloud-text').textContent = 'gift ready for you!';
+    } else if (c.state === 'paused') {
+      $('#cloud-text').textContent = 'resting peacefully';
+    } else {
+      $('#cloud-text').textContent = 'happy to help!';
+    }
+
+    // Render Dynamic Right Artifact
+    renderArtifactStage(c);
+    renderMeadow();
+  }
+
+  // --- Render the Dynamic Workbench Artifact ---
+  function renderArtifactStage(c) {
+    const stageEl = $('#artifact-stage');
+
+    // STATE A: THE BLUEPRINT PARCHMENT (NEEDS OK)
+    if (c.state === 'asking') {
+      const pinnedHtml = c.pinnedNotes
+        .map(
+          (note) => `
+          <div class="pinned-sticky-note">
+            <span class="sticky-note-pin" aria-hidden="true">📌</span>
+            <span>"${note}"</span>
+          </div>
+        `
+        )
+        .join('');
+
+      stageEl.innerHTML = `
+        <div class="blueprint-card" id="blueprint-card">
+          <div class="watermark-stamp" id="watermark-stamp">★ APPROVED FOR BUILD ★</div>
+          
+          <div class="blueprint-header">
+            <span class="blueprint-tag">📜 Blueprint #${c.id === 'atlas' ? '42' : '88'} · Specification</span>
+            <span class="blueprint-eta">Estimated time: ${c.eta}</span>
+          </div>
+
+          <h3 class="blueprint-title">${c.task}</h3>
+          <p class="blueprint-story">${c.story}</p>
+
+          <div class="comparison-box">
+            <span class="comp-before">✕ ${c.compBefore || 'Legacy failure'}</span>
+            <span class="comp-arrow">➔</span>
+            <span class="comp-after">✓ ${c.compAfter || 'Optimized buffer'}</span>
+          </div>
+
+          <div class="blueprint-plan-row">
+            ${c.plan.map((p, i) => `<span class="plan-pill">${i + 1}. ${p}</span>`).join('<span class="plan-sep">→</span>')}
+          </div>
+
+          ${pinnedHtml}
+
+          <div class="blueprint-actions">
+            <button class="stamp-btn" id="btn-stamp-approval" type="button">
+              <span>🌟 Stamp: Approved!</span>
+            </button>
+            <button class="btn btn-secondary" id="btn-open-whisper" type="button">
+              <span>📌 Attach Sticky Note</span>
+            </button>
+          </div>
+        </div>
+      `;
+
+      // Bind Stamp Action
+      $('#btn-stamp-approval').onclick = (e) => {
+        const rect = e.target.getBoundingClientRect();
+        const watermark = $('#watermark-stamp');
+        if (watermark) watermark.classList.add('slammed');
+
+        burstConfetti(rect.left + rect.width / 2, rect.top + rect.height / 2, 50);
+        awardPoints(50, `Stamped approval on ${c.name}'s blueprint`);
+
+        $('#cloud-text').textContent = 'blueprint approved! starting build!';
+
+        setTimeout(() => {
+          c.state = 'working';
+          c.workIndex = 0;
+          renderWorkbench();
+          startCompanionWork(c);
+        }, 650);
+      };
+
+      // Bind Sticky Note Modal
+      $('#btn-open-whisper').onclick = () => {
+        $('#whisper-agent-name').textContent = c.name;
+        $('#whisper-input').value = '';
+        $('#modal-whisper').showModal();
+        $('#whisper-input').focus();
+      };
+      return;
+    }
+
+    // STATE B: LIVE THOUGHTSTREAM (WORKING)
+    if (c.state === 'working') {
+      const stage = c.workStream ? c.workStream[c.workIndex] || c.workStream[0] : ['Building', 'Running checks', 'almost there'];
+      const nextStage = c.workStream ? c.workStream[c.workIndex + 1]?.[1] || 'Final review verification' : 'Review';
+
+      stageEl.innerHTML = `
+        <div class="thoughtstream-card">
+          <div class="stream-pulse-row">
+            <span class="pill-dot" style="background:var(--blue);" aria-hidden="true"></span>
+            <span>Live Companion Thoughtstream</span>
+          </div>
+
+          <div class="stream-bubble">
+            <span class="stream-now-label">Currently executing:</span>
+            <p class="stream-now-text">"${stage[1]}"</p>
+            <p class="stream-next-text"><strong>Next:</strong> ${nextStage}</p>
+          </div>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn btn-primary sm" id="btn-whisper-stream" type="button">
+              <span>💭 Whisper Advice</span>
+            </button>
+            <button class="btn btn-secondary sm" id="btn-pause-stream" type="button">
+              <span>⏸ Pause Companion</span>
+            </button>
+          </div>
+        </div>
+      `;
+
+      $('#btn-whisper-stream').onclick = () => {
+        $('#whisper-agent-name').textContent = c.name;
+        $('#whisper-input').value = '';
+        $('#modal-whisper').showModal();
+        $('#whisper-input').focus();
+      };
+
+      $('#btn-pause-stream').onclick = () => {
+        c.state = 'paused';
+        clearInterval(c.timer);
+        c.timer = null;
+        renderWorkbench();
+        showToast(`${c.name} paused to take a quick breather.`, '☕');
+      };
+      return;
+    }
+
+    // STATE C: WRAPPED GIFT PARCEL (REVIEW READY)
+    if (c.state === 'review') {
+      stageEl.innerHTML = `
+        <div class="gift-parcel-card">
+          <div class="gift-icon" aria-hidden="true">🎁</div>
+          <h3 class="gift-title">A Gift from ${c.name} is Ready!</h3>
+          <p class="gift-summary">${c.story}</p>
+
+          <div style="margin-bottom:20px;">
+            <span style="background:var(--ok-bg); color:var(--ok); font-weight:700; font-size:13px; padding:6px 14px; border-radius:var(--radius-pill);">
+              ${c.checksProof || 'All automated verification tests passed cleanly'}
+            </span>
+          </div>
+
+          <div style="display:flex; justify-content:center; gap:12px;">
+            <button class="btn btn-primary" id="btn-accept-gift" type="button">
+              <span>✿ Unwrap & Celebrate (+50 pts)</span>
+            </button>
+            <button class="btn btn-secondary" id="btn-whisper-gift" type="button">
+              <span>📌 Suggest Polish</span>
+            </button>
+          </div>
+        </div>
+      `;
+
+      $('#btn-accept-gift').onclick = (e) => {
+        const rect = e.target.getBoundingClientRect();
+        burstConfetti(rect.left + rect.width / 2, rect.top + rect.height / 2, 60);
+        awardPoints(50, `Accepted and merged ${c.name}'s verified contribution`);
+        c.state = 'done';
+        renderWorkbench();
+      };
+
+      $('#btn-whisper-gift').onclick = () => {
+        $('#whisper-agent-name').textContent = c.name;
+        $('#whisper-input').value = '';
+        $('#modal-whisper').showModal();
+        $('#whisper-input').focus();
+      };
+      return;
+    }
+
+    // STATE D: RESTING TEA LOUNGE (PAUSED)
+    if (c.state === 'paused') {
+      stageEl.innerHTML = `
+        <div class="peaceful-card">
+          <div class="peaceful-emoji" aria-hidden="true">☕</div>
+          <h3 class="peaceful-title">${c.name} is resting peacefully</h3>
+          <p class="peaceful-desc">${c.story || 'Taking a mindful pause between builds.'}</p>
+          <button class="btn btn-primary" id="btn-resume-work" type="button">
+            <span>🌿 Resume with a warm cup of coffee</span>
+          </button>
+        </div>
+      `;
+
+      $('#btn-resume-work').onclick = () => {
+        c.state = 'working';
+        renderWorkbench();
+        startCompanionWork(c);
+        showToast(`${c.name} resumed work with fresh energy!`, '⚡');
+      };
+      return;
+    }
+
+    // STATE E: VICTORY GARDEN (DONE)
+    stageEl.innerHTML = `
+      <div class="peaceful-card">
+        <div class="peaceful-emoji" aria-hidden="true">🏆</div>
+        <h3 class="peaceful-title">Mission Accomplished!</h3>
+        <p class="peaceful-desc">${c.story || 'All tests passed and code merged with zero regressions.'}</p>
+        <button class="btn btn-primary" id="btn-assign-new-task" type="button">
+          <span>🌿 Assign Next Blueprint</span>
+        </button>
+      </div>
+    `;
+
+    $('#btn-assign-new-task').onclick = () => {
+      c.state = 'asking';
+      c.workIndex = 0;
+      renderWorkbench();
+      showToast(`${c.name} is ready for their next blueprint!`, '📜');
+    };
+  }
+
+  // --- Companion Work Loop Simulation ---
+  function startCompanionWork(companion) {
+    clearInterval(companion.timer);
+    companion.timer = window.setInterval(() => {
+      if (companion.state !== 'working') return;
+      companion.workIndex += 1;
+      const streamLen = companion.workStream ? companion.workStream.length : 3;
+
+      if (companion.workIndex >= streamLen) {
+        clearInterval(companion.timer);
+        companion.timer = null;
+        companion.state = 'review';
+        showToast(`${companion.name} completed the build and wrapped a gift parcel!`, '🎁');
+      }
+
+      if (companion.id === activeId) renderWorkbench();
+      else renderMeadow();
+    }, 4500);
+  }
+
+  // --- Select Companion in Meadow ---
+  function selectCompanion(id) {
+    if (!companions[id]) return;
+    activeId = id;
+    renderWorkbench();
+
+    clearTimeout(switchTimer);
+    $('#scene').classList.remove('switching');
+    void $('#scene').offsetWidth;
+    $('#scene').classList.add('switching');
+    switchTimer = setTimeout(() => $('#scene').classList.remove('switching'), 440);
+  }
+
+  // --- Meadow Click Delegation ---
+  $('#meadow-grid').addEventListener('click', (e) => {
+    const slot = e.target.closest('.meadow-slot');
+    if (slot && slot.dataset.agent) {
+      selectCompanion(slot.dataset.agent);
+      $('#workbench-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  });
+
+  // --- Filter Pills Handling ---
+  $('#filter-pills-group').addEventListener('click', (e) => {
+    const pill = e.target.closest('.filter-pill');
+    if (!pill) return;
+    $$('#filter-pills-group .filter-pill').forEach((p) => {
+      p.classList.remove('is-active');
+      p.setAttribute('aria-selected', 'false');
+    });
+    pill.classList.add('is-active');
+    pill.setAttribute('aria-selected', 'true');
+    currentFilter = pill.dataset.filter;
+    renderMeadow();
+  });
+
+  // --- Search Input Handling ---
+  $('#agent-search-input').addEventListener('input', (e) => {
+    searchQuery = e.target.value.toLowerCase().trim();
+    renderMeadow();
+  });
+
+  // --- Autonomy Dial Buttons ---
+  $$('.dial-pill').forEach((pill) => {
+    pill.addEventListener('click', () => {
+      const c = activeCompanion();
+      c.autonomy = pill.dataset.level;
+      $$('.dial-pill').forEach((p) => {
+        p.classList.toggle('is-active', p === pill);
+        p.setAttribute('aria-checked', String(p === pill));
+      });
+      showToast(
+        c.autonomy === 'apprentice'
+          ? `${c.name} is now Guided: will check in with you before editing code.`
+          : c.autonomy === 'partner'
+          ? `${c.name} is now Partner: acts on safe fixes, asks on auth & breaking changes.`
+          : `${c.name} is now Autonomous: will run freely and present finished gift parcels!`,
+        '🤝'
+      );
+    });
+  });
+
+  // --- Sticky Note Whispers Modal Actions ---
+  $('#btn-cancel-whisper').onclick = () => $('#modal-whisper').close();
+
+  $('#btn-send-whisper').onclick = () => {
+    const c = activeCompanion();
+    const val = $('#whisper-input').value.trim();
+    if (!val) return $('#whisper-input').focus();
+
+    c.pinnedNotes.push(val);
+    $('#modal-whisper').close();
+
+    showToast(`Sticky note pinned to ${c.name}'s workbench!`, '📌');
+    renderWorkbench();
+  };
+
+  // --- Activity & Approvals Modal ---
+  function openActivityModal() {
+    const listEl = $('#activity-feed-list');
+    listEl.innerHTML = Object.values(companions)
+      .map((c) => {
+        const isUrgent = c.state === 'asking';
+        const isReview = c.state === 'review';
+        return `
+          <div class="activity-item">
+            <div class="activity-avatar-pill ${c.avatarClass || 'avatar-atlas'}">${c.initials}</div>
+            <div class="activity-content">
+              <div class="activity-header-row">
+                <span class="activity-actor">${c.name} (${c.roleType})</span>
+                <span class="activity-time">${isUrgent ? 'Needs Action' : isReview ? 'Ready' : 'In Progress'}</span>
+              </div>
+              <p class="activity-text">${c.task}</p>
+              ${
+                isUrgent
+                  ? `<button class="btn btn-primary sm act-jump-btn" data-agent="${c.id}" type="button">Inspect & Stamp ★</button>`
+                  : isReview
+                  ? `<button class="btn btn-primary sm act-jump-btn" data-agent="${c.id}" type="button">Unwrap Gift 🎁</button>`
+                  : `<button class="btn btn-secondary sm act-jump-btn" data-agent="${c.id}" type="button">Open Workbench</button>`
+              }
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
+    $$('.act-jump-btn').forEach((btn) => {
+      btn.onclick = () => {
+        $('#modal-activity').close();
+        selectCompanion(btn.dataset.agent);
+        $('#workbench-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      };
+    });
+
+    $('#modal-activity').showModal();
+  }
+
+  $('#btn-activity-toggle').onclick = openActivityModal;
+  $('#btn-bell-notifications').onclick = openActivityModal;
+  $('#btn-close-activity').onclick = () => $('#modal-activity').close();
+
+  // --- Agent Audit Log Modal ---
+  function openAuditModal() {
+    const bodyEl = $('#audit-table-body');
+    bodyEl.innerHTML = auditLogs
+      .map(
+        (log) => `
+        <tr>
+          <td>${log.time}</td>
+          <td><strong>${log.agent}</strong></td>
+          <td>${log.action}</td>
+          <td><span class="audit-hash">${log.hash}</span></td>
+        </tr>
+      `
+      )
+      .join('');
+
+    $('#modal-audit').showModal();
+  }
+
+  $('#btn-audit-toggle').onclick = openAuditModal;
+  $('#btn-close-audit').onclick = () => $('#modal-audit').close();
+
+  // --- Summon a New Companion Modal ---
+  $('#btn-create-agent-toggle').onclick = () => {
+    $('#form-create-agent').reset();
+    $('#modal-create-agent').showModal();
+  };
+
+  $('#btn-close-create').onclick = () => $('#modal-create-agent').close();
+  $('#btn-cancel-create').onclick = () => $('#modal-create-agent').close();
+
+  $('#form-create-agent').onsubmit = (e) => {
+    e.preventDefault();
+    const name = $('#new-agent-name').value.trim();
+    if (!name) return;
+
+    const roleType = $('#new-agent-role').value;
+    const autonomy = $('#new-agent-autonomy').value;
+    const id = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const initials = (name.length >= 2 ? name.slice(0, 2) : name + 'X').toUpperCase();
+
+    const newCompanion = {
+      id: id,
+      name: name,
+      role: roleType === 'Contributor' ? 'The Specialist' : 'The Co-pilot',
+      roleType: roleType,
+      initials: initials,
+      avatarClass: 'avatar-atlas',
+      state: 'asking',
+      workIndex: 0,
+      timer: null,
+      task: 'Initial integration check & test suite run',
+      eta: '~15 min',
+      story: `Hello Joshua! I was just summoned into the Zedu workspace as a ${roleType}. I drafted my initial setup plan.`,
+      compBefore: 'Manual setup required',
+      compAfter: 'Automated workspace integration',
+      plan: ['Connect to Zedu repository', 'Run automated healthcheck', 'Await your stamp'],
+      pinnedNotes: [],
+      autonomy: autonomy,
+      key: `z1k1_${Math.random().toString(36).substring(2, 9)}`
+    };
+
+    companions[id] = newCompanion;
+    $('#modal-create-agent').close();
+
+    burstConfetti(window.innerWidth / 2, window.innerHeight / 2, 60);
+    awardPoints(25, `Summoned ${name} as a new companion!`);
+    selectCompanion(id);
+    showToast(`Welcome ${name} to your live team meadow!`, '✨');
+  };
+
+  // --- Boop Petting Micro-Delight ---
+  $('#bot').addEventListener('click', () => {
+    clearTimeout(boopTimer);
+    const prevText = $('#cloud-text').textContent;
+    $('#scene').classList.remove('is-petted');
+    void $('#scene').offsetWidth;
+    $('#scene').classList.add('is-petted');
+    $('#cloud-text').textContent = 'boop! ✨';
+
+    boopTimer = setTimeout(() => {
+      $('#scene').classList.remove('is-petted');
+      if ($('#cloud-text').textContent === 'boop! ✨') $('#cloud-text').textContent = prevText;
+    }, 1100);
+  });
+
+  // --- Eye Tracking Following Cursor ---
+  if (!reduce) {
+    window.addEventListener('pointermove', (e) => {
+      const box = $('#bot').getBoundingClientRect();
+      const x = (e.clientX - box.left - box.width / 2) / box.width;
+      const y = (e.clientY - box.top - box.height / 2) / box.height;
+      $('#bot').style.setProperty('--eye-x', `${Math.max(-3.5, Math.min(3.5, x * 7))}px`);
+      $('#bot').style.setProperty('--eye-y', `${Math.max(-2.5, Math.min(2.5, y * 5))}px`);
+    });
+  }
+
+  // --- Quiet Developer Drawer ---
+  function renderDevKeys() {
+    const keysGrid = $('#keys-grid');
+    keysGrid.innerHTML = Object.values(companions)
+      .map(
+        (c) => `
+        <div class="key-card">
+          <div>
+            <div class="key-owner">${c.name} (${c.roleType})</div>
+            <div class="key-token">${c.key}</div>
+          </div>
+          <button class="btn btn-secondary sm copy-dev-key" data-key="${c.key}" type="button">Copy</button>
+        </div>
+      `
+      )
+      .join('');
+
+    $$('.copy-dev-key').forEach((btn) => {
+      btn.onclick = () => {
+        const key = btn.dataset.key;
+        if (navigator.clipboard) navigator.clipboard.writeText(key).catch(() => {});
+        btn.textContent = 'Copied!';
+        showToast(`Developer key copied!`, '📋');
+        setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+      };
+    });
+  }
+
+  $('#btn-keys-toggle').addEventListener('click', () => {
+    const drawer = $('#dev-drawer');
+    const isHidden = drawer.hidden;
+    drawer.hidden = !isHidden;
+    if (isHidden) {
+      renderDevKeys();
+      drawer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+
+  $('#btn-close-drawer').addEventListener('click', () => {
+    $('#dev-drawer').hidden = true;
+  });
+
+  // --- Initial Mount ---
+  renderMeadow();
+  renderWorkbench();
+  startCompanionWork(companions.nova);
+})();
