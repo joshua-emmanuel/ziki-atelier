@@ -29,9 +29,8 @@
   --gold-border: #fedf89;
   --shadow: 0 4px 20px -2px rgba(20, 36, 59, 0.05);
   --shadow-lg: 0 12px 36px -8px rgba(20, 36, 59, 0.1);
-  --head: 'Space Grotesk', system-ui, sans-serif;
-  --sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --hand: 'Caveat', cursive, sans-serif;
+  --head: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 22px;
@@ -117,9 +116,9 @@ button {
 }
 
 .header-inner {
-  max-width: 1120px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 24px;
   height: 60px;
   display: flex;
   align-items: center;
@@ -129,7 +128,7 @@ button {
 .header-left {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
 }
 
 .brand {
@@ -158,66 +157,26 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 5px 12px;
   background-color: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--radius-pill);
   font-size: 13px;
   font-weight: 600;
   color: var(--ink);
-  cursor: pointer;
 }
 
-.nav-links-center {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-left: 6px;
-}
-
-@media (max-width: 780px) {
-  .nav-links-center {
-    display: none;
-  }
-}
-
-.nav-link {
-  color: var(--ink-secondary);
-  text-decoration: none;
-  font-size: 13.5px;
-  font-weight: 500;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  transition: color 0.15s;
-}
-
-.nav-link:hover {
-  color: var(--blue);
+.pill-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--ok);
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.agents-menu-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  background: var(--blue-soft);
-  border: 1px solid rgba(52, 120, 246, 0.2);
-  border-radius: var(--radius-pill);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--blue);
-  cursor: pointer;
-}
-
-.agent-icon-svg {
-  display: flex;
-  align-items: center;
+  gap: 12px;
 }
 
 .points-badge {
@@ -227,7 +186,7 @@ button {
   background-color: var(--gold-bg);
   border: 1px solid var(--gold-border);
   border-radius: var(--radius-pill);
-  padding: 4px 10px;
+  padding: 4px 12px;
   color: var(--gold-text);
   font-size: 13px;
   font-weight: 700;
@@ -242,54 +201,24 @@ button {
 .user-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 8px;
+  gap: 8px;
+  padding: 4px 10px;
   border-radius: var(--radius-pill);
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--ink);
-  cursor: pointer;
 }
 
 .user-avatar {
   display: grid;
   place-items: center;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background-color: #9d174d;
   color: #ffffff;
   font-weight: 700;
-  font-size: 11px;
-}
-
-.bell-btn {
-  position: relative;
-  width: 32px;
-  height: 32px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: transparent;
-  border: 1px solid var(--line);
-  color: var(--ink-secondary);
-  transition: all 0.2s;
-}
-
-.bell-btn:hover {
-  color: var(--ink);
-  border-color: var(--muted);
-}
-
-.bell-dot {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background-color: #ef4444;
-  border: 1.5px solid var(--card);
+  font-size: 12px;
 }
 
 .theme-toggle {
@@ -369,12 +298,6 @@ html[data-theme='dark'] .toggle-thumb {
   flex-wrap: wrap;
 }
 
-.title-with-badge {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .page-title {
   font-family: var(--head);
   font-size: 32px;
@@ -383,249 +306,11 @@ html[data-theme='dark'] .toggle-thumb {
   margin: 0 0 6px;
 }
 
-.atelier-badge {
-  font-size: 12px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
-  background: var(--blue-soft);
-  color: var(--blue);
-  border: 1px solid rgba(52, 120, 246, 0.2);
-}
-
 .page-subtitle {
   color: var(--ink-secondary);
-  font-size: 14.5px;
+  font-size: 15px;
   margin: 0;
   max-width: 650px;
-  line-height: 1.5;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.action-alert-badge {
-  display: inline-grid;
-  place-items: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background-color: var(--ask);
-  color: #ffffff;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1;
-}
-
-/* ==========================================================================
-   0. AUTHENTIC ZIKI SUMMARY CARDS
-   ========================================================================== */
-
-.summary-grid {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-@media (max-width: 768px) {
-  .summary-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.summary-card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  padding: 16px 20px;
-  box-shadow: var(--shadow);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.summary-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.summary-label {
-  font-size: 11.5px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  color: var(--muted);
-  text-transform: uppercase;
-}
-
-.summary-limit, .summary-sublabel {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.summary-count-row {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-  margin-bottom: 10px;
-}
-
-.summary-num {
-  font-family: var(--head);
-  font-size: 26px;
-  font-weight: 800;
-  color: var(--ink);
-  line-height: 1;
-}
-
-.summary-denom {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--muted);
-}
-
-.summary-bar-track {
-  width: 100%;
-  height: 6px;
-  border-radius: var(--radius-pill);
-  background: var(--line-subtle);
-  overflow: hidden;
-}
-
-.summary-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #3478f6, #60a5fa);
-  border-radius: var(--radius-pill);
-  transition: width 0.4s var(--spring);
-}
-
-.roles-pills-wrap {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-.role-pill {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: var(--radius-pill);
-  background: var(--bg);
-  border: 1px solid var(--line);
-  color: var(--muted);
-  transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.role-pill small {
-  font-size: 10.5px;
-  opacity: 0.8;
-}
-
-.role-pill.is-active {
-  color: var(--ink);
-  border-color: var(--line);
-  background: var(--card);
-}
-
-.role-pill.is-highlight {
-  background: var(--blue-soft);
-  border-color: rgba(52, 120, 246, 0.3);
-  color: var(--blue);
-  font-weight: 700;
-}
-
-/* ==========================================================================
-   0B. SEARCH & ROLE FILTER BAR
-   ========================================================================== */
-
-.filter-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 22px;
-  flex-wrap: wrap;
-}
-
-.search-wrap {
-  position: relative;
-  flex: 1;
-  min-width: 260px;
-  max-width: 380px;
-}
-
-.search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 14px;
-  pointer-events: none;
-  opacity: 0.6;
-}
-
-.search-input {
-  width: 100%;
-  height: 38px;
-  padding: 0 14px 0 36px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-pill);
-  background: var(--card);
-  color: var(--ink);
-  font-size: 13.5px;
-  transition: all 0.2s;
-}
-
-.search-input:focus {
-  border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(52, 120, 246, 0.15);
-  outline: none;
-}
-
-.filter-pills-group {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.filter-pill {
-  padding: 5px 12px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--line);
-  background: var(--card);
-  color: var(--ink-secondary);
-  font-size: 13px;
-  font-weight: 600;
-  transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.filter-pill:hover {
-  border-color: var(--blue);
-  color: var(--blue);
-}
-
-.filter-pill.is-active {
-  background: var(--blue);
-  border-color: var(--blue);
-  color: #ffffff;
-}
-
-.filter-count {
-  font-size: 11px;
-  opacity: 0.85;
 }
 
 /* ==========================================================================
@@ -748,15 +433,34 @@ html[data-theme='dark'] .toggle-thumb {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   color: #fff;
   font-family: var(--head);
   font-weight: 700;
   font-size: 15px;
+  line-height: 1;
   margin-bottom: 8px;
   position: relative;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.slot-initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  transform: translateY(0.5px);
+}
+
+.mini-halo {
+  display: none !important;
 }
 
 .avatar-atlas { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
@@ -1074,8 +778,63 @@ html[data-theme='dark'] .halo { background: radial-gradient(circle, #243b59 0%, 
   background: #f8fcff;
   border-radius: 34px 34px 30px 30px;
   box-shadow: inset 0 -4px 0 #e8f4ff;
+  overflow: visible;
 }
 
+/* Floating Zzz stream for sleeping companions */
+.zzz-stream {
+  position: absolute;
+  top: -24px;
+  right: 12px;
+  display: none;
+  font-family: var(--sans);
+  font-weight: 800;
+  color: #8b5cf6;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.scene[data-state='paused'] .zzz-stream {
+  display: block;
+}
+
+.zzz-stream i {
+  position: absolute;
+  opacity: 0;
+  animation: zzz-drift 2.7s ease-in-out infinite;
+}
+.zzz-stream i:nth-child(1) { font-size: 11px; animation-delay: 0s; left: 0; }
+.zzz-stream i:nth-child(2) { font-size: 14px; animation-delay: 0.9s; left: 8px; }
+.zzz-stream i:nth-child(3) { font-size: 18px; animation-delay: 1.8s; left: 16px; }
+
+@keyframes zzz-drift {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+  25% { opacity: 0.9; }
+  75% { opacity: 0.8; }
+  100% { transform: translate(18px, -36px) scale(1.2); opacity: 0; }
+}
+
+/* Sweat droplet for focused working state */
+.sweat-drop {
+  position: absolute;
+  top: 8px;
+  right: 14px;
+  font-size: 13px;
+  display: none;
+  animation: sweat-bob 1.3s ease-in-out infinite;
+  z-index: 5;
+}
+
+.scene[data-state='working'] .sweat-drop {
+  display: block;
+}
+
+@keyframes sweat-bob {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-4px) scale(1.18); }
+}
+
+/* Eyes */
 .eye {
   position: absolute;
   top: 26px;
@@ -1091,6 +850,68 @@ html[data-theme='dark'] .halo { background: radial-gradient(circle, #243b59 0%, 
 .eye.left { left: 23px; }
 .eye.right { right: 23px; animation-delay: 0.04s; }
 
+/* 1. Asking Expression (Atlas) - Wide, hopeful, pleading puppy-dog eyes */
+.scene[data-state='asking'] .eye {
+  width: 12px;
+  height: 16px;
+  border-radius: 50%;
+  box-shadow: inset 3px 3px 0 #ffffff;
+}
+
+/* 2. Working Expression (Nova) - Focused code-scanning eyes */
+.scene[data-state='working'] .eye {
+  height: 7px;
+  border-radius: 6px;
+  animation: code-scan 0.85s ease-in-out infinite alternate;
+}
+
+@keyframes code-scan {
+  0% { transform: translateX(-3.5px); }
+  100% { transform: translateX(3.5px); }
+}
+
+/* 3. Sleeping / Paused Expression (Dexter) - Closed curved peaceful sleeping eyes */
+.scene[data-state='paused'] .eye {
+  height: 4px;
+  border-radius: 0 0 10px 10px;
+  background: transparent;
+  border-bottom: 3.5px solid #1f3e64;
+  animation: none;
+  top: 31px;
+}
+
+.scene[data-state='paused'] .bot-sprite {
+  animation: sleep-breathing 3.6s ease-in-out infinite !important;
+}
+
+@keyframes sleep-breathing {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50% { transform: translateY(-6px) scaleY(1.03); }
+}
+
+.scene[data-state='paused'] .antenna {
+  transform: translateX(-50%) rotate(16deg) !important;
+  animation: none !important;
+}
+
+/* 4. Done / Celebrating Expression (Caius) - Happy crescent smiling eyes */
+.scene[data-state='done'] .eye {
+  height: 5px;
+  border-radius: 10px 10px 0 0;
+  background: transparent;
+  border-top: 3.5px solid #1f3e64;
+  top: 27px;
+  animation: none;
+}
+
+/* 5. Review Ready Expression (Luna) - Bright, proud eyes */
+.scene[data-state='review'] .eye {
+  width: 11px;
+  height: 14px;
+  border-radius: 50%;
+  box-shadow: inset 2px 2px 0 #ffffff;
+}
+
 .cheek {
   position: absolute;
   top: 43px;
@@ -1102,6 +923,11 @@ html[data-theme='dark'] .halo { background: radial-gradient(circle, #243b59 0%, 
 .cheek.left { left: 11px; }
 .cheek.right { right: 11px; }
 
+.scene[data-state='paused'] .cheek {
+  background: #e2c0ff;
+  opacity: 0.85;
+}
+
 .mouth {
   position: absolute;
   left: 50%;
@@ -1112,10 +938,51 @@ html[data-theme='dark'] .halo { background: radial-gradient(circle, #243b59 0%, 
   border: 3px solid #385777;
   border-top: 0;
   border-radius: 0 0 14px 14px;
+  transition: all 0.2s ease;
 }
 
-.scene[data-state='working'] .mouth { width: 12px; height: 12px; border-radius: 50%; top: 40px; }
-.scene[data-state='done'] .mouth { width: 20px; height: 12px; border-width: 4px; }
+.scene[data-state='asking'] .mouth {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  top: 43px;
+  border-width: 2.5px;
+}
+
+.scene[data-state='working'] .mouth {
+  width: 11px;
+  height: 5px;
+  top: 45px;
+  border-radius: 4px;
+  border-top: 2.5px solid #385777;
+  border-bottom: 0;
+}
+
+.scene[data-state='paused'] .mouth {
+  width: 10px;
+  height: 5px;
+  top: 45px;
+  border-width: 2.5px;
+  border-radius: 0 0 10px 10px;
+}
+
+.scene[data-state='done'] .mouth {
+  width: 18px;
+  height: 11px;
+  border-radius: 0 0 14px 14px;
+  background: #e11d48;
+  border-color: #be123c;
+  border-width: 2.5px;
+  top: 42px;
+}
+
+.scene[data-state='review'] .mouth {
+  width: 16px;
+  height: 9px;
+  border-radius: 0 0 14px 14px;
+  border-width: 3px;
+  top: 43px;
+}
 
 .heart {
   position: absolute;
@@ -1400,19 +1267,21 @@ html[data-theme='dark'] .ground {
   font-size: 11px;
 }
 
-/* Pinned Sticky Note */
+/* Pinned Sticky Note (Clean non-cursive font) */
 .pinned-sticky-note {
   background: var(--sticky-yellow);
   border: 1px solid var(--sticky-border);
-  padding: 10px 14px;
+  padding: 10px 14px 10px 32px;
   border-radius: var(--radius-sm);
   margin-bottom: 18px;
   position: relative;
-  font-family: var(--hand);
-  font-size: 18px;
+  font-family: var(--sans);
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.45;
   color: #713f12;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-  transform: rotate(-1.5deg);
+  transform: rotate(-1deg);
 }
 
 html[data-theme='dark'] .pinned-sticky-note {
@@ -1670,6 +1539,34 @@ html[data-theme='dark'] .gift-parcel-card {
   font-size: 13px;
 }
 
+.btn.is-disabled, .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed !important;
+  pointer-events: auto;
+  box-shadow: none !important;
+  background: var(--line) !important;
+  color: var(--muted) !important;
+  border-color: var(--line) !important;
+  transform: none !important;
+}
+
+.limit-alert-box {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: 12.5px;
+  margin-bottom: 14px;
+  line-height: 1.45;
+}
+
+html[data-theme='dark'] .limit-alert-box {
+  background: #450a0a;
+  border-color: #7f1d1d;
+  color: #fca5a5;
+}
+
 /* ==========================================================================
    3. QUIET DEVELOPER DRAWER
    ========================================================================== */
@@ -1751,185 +1648,6 @@ dialog:modal {
   width: 100%;
 }
 
-dialog.dialog-wide:modal {
-  max-width: min(94vw, 560px);
-}
-
-dialog::backdrop {
-  background: rgba(15, 23, 42, 0.5);
-  backdrop-filter: blur(4px);
-  overflow: hidden;
-  overscroll-behavior: contain;
-}
-
-.dialog-card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-xl);
-  padding: 24px;
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
-  position: relative;
-}
-
-.dialog-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 16px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--line-subtle);
-}
-
-.dialog-title {
-  font-family: var(--head);
-  font-size: 20px;
-  font-weight: 700;
-  margin: 0 0 4px;
-}
-
-.dialog-sub {
-  font-size: 13px;
-  color: var(--ink-secondary);
-  margin: 0;
-}
-
-.activity-feed-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-height: 380px;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-
-.activity-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px;
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  transition: transform 0.2s;
-}
-
-.activity-item:hover {
-  transform: translateX(3px);
-}
-
-.activity-avatar-pill {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  color: #fff;
-  font-family: var(--head);
-  font-weight: 700;
-  font-size: 12px;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-
-.activity-content {
-  flex: 1;
-}
-
-.activity-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  margin-bottom: 3px;
-}
-
-.activity-actor {
-  font-weight: 700;
-  font-size: 13.5px;
-}
-
-.activity-time {
-  font-size: 11.5px;
-  color: var(--muted);
-}
-
-.activity-text {
-  font-size: 13px;
-  color: var(--ink-secondary);
-  margin: 0 0 8px;
-}
-
-.audit-table-wrap {
-  max-height: 320px;
-  overflow-y: auto;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-}
-
-.audit-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12.5px;
-}
-
-.audit-table th {
-  background: var(--bg);
-  padding: 8px 12px;
-  text-align: left;
-  font-weight: 700;
-  color: var(--muted);
-  font-size: 11px;
-  text-transform: uppercase;
-  border-bottom: 1px solid var(--line);
-}
-
-.audit-table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--line-subtle);
-  color: var(--ink-secondary);
-}
-
-.audit-hash {
-  font-family: ui-monospace, monospace;
-  font-size: 11px;
-  color: var(--muted);
-}
-
-.form-group {
-  margin-bottom: 14px;
-}
-
-.form-label {
-  display: block;
-  font-size: 12.5px;
-  font-weight: 700;
-  margin-bottom: 6px;
-  color: var(--ink);
-}
-
-.form-input, .form-select {
-  width: 100%;
-  height: 38px;
-  padding: 0 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  color: var(--ink);
-  font-size: 13.5px;
-}
-
-.form-input:focus, .form-select:focus {
-  border-color: var(--blue);
-  outline: none;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 18px;
-}
-
 dialog::backdrop {
   background: rgba(15, 23, 42, 0.5);
   backdrop-filter: blur(4px);
@@ -1979,8 +1697,9 @@ html[data-theme='dark'] .sticky-note-card {
   border-radius: var(--radius-sm);
   background: rgba(255, 255, 255, 0.7);
   color: var(--ink);
-  font-family: var(--hand);
-  font-size: 19px;
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
   resize: vertical;
 }
 

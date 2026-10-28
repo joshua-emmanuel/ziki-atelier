@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Space+Grotesk:wght@500;600;700&family=Caveat:wght@600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
@@ -212,7 +212,7 @@
             <div>
               <div class="active-name-row">
                 <h2 class="active-name" id="wb-name">Atlas</h2>
-                <span class="active-tag" id="wb-role">The Builder</span>
+                <span class="active-tag" id="wb-role">The Builder · Contributor</span>
               </div>
               <p class="active-task-desc" id="wb-task-desc">Working on: Fix login timeout on mobile web (#42)</p>
             </div>
@@ -236,7 +236,7 @@
         </div>
 
         <div class="workbench-layout">
-          <!-- Left: Physical Reactive Sidekick (Eye-tracking, boop, animations) -->
+          <!-- Left: Physical Reactive Sidekick (Eye-tracking, boop, animations, states) -->
           <div class="scene-col">
             <div class="scene" id="scene" data-agent="atlas" data-state="asking">
               <div class="halo" aria-hidden="true"></div>
@@ -253,12 +253,16 @@
                 <span id="cloud-text">waiting for your stamp!</span>
               </div>
 
-              <!-- Interactive Bot Button -->
-              <button class="bot" id="bot" type="button" aria-label="Tap Atlas for a cheerful greeting">
+              <!-- Interactive Bot Button with full character expressions -->
+              <button class="bot" id="bot" type="button" aria-label="Tap to interact with your companion">
                 <span class="bot-sprite">
                   <span class="antenna"></span>
                   <span class="body">
                     <span class="face">
+                      <!-- Floating Zzz for sleeping/paused -->
+                      <span class="zzz-stream" aria-hidden="true"><i>Z</i><i>z</i><i>z</i></span>
+                      <!-- Sweat drop for active working -->
+                      <span class="sweat-drop" aria-hidden="true">💧</span>
                       <span class="eye left"></span>
                       <span class="eye right"></span>
                       <span class="cheek left"></span>
@@ -318,7 +322,7 @@
       </section>
     </main>
 
-    <!-- Modal 1: Sticky Note Modal for Whispers -->
+    <!-- Modal 1: Sticky Note Modal for Whispers (Clean Font, no cursive) -->
     <dialog class="sticky-modal" id="modal-whisper" aria-labelledby="whisper-title">
       <div class="sticky-note-card">
         <div class="sticky-pin" aria-hidden="true">📌</div>
@@ -381,7 +385,7 @@
       </div>
     </dialog>
 
-    <!-- Modal 4: Summon a New Companion Modal -->
+    <!-- Modal 4: Summon a New Companion Modal (With 5-limit validation) -->
     <dialog id="modal-create-agent" aria-labelledby="create-modal-title">
       <div class="dialog-card">
         <div class="dialog-head">
@@ -390,6 +394,9 @@
             <p class="dialog-sub">Add a dedicated AI teammate to your workspace meadow</p>
           </div>
           <button class="btn btn-secondary sm" type="button" id="btn-close-create">✕</button>
+        </div>
+        <div id="create-limit-notice" class="limit-alert-box" style="display:none;">
+          <span>⚠️ Workspace limit reached (5/5 agents). Please delete or revoke an existing agent in Developer Keys to summon a new one.</span>
         </div>
         <form id="form-create-agent" class="modal-form">
           <div class="form-group">
@@ -415,7 +422,7 @@
           </div>
           <div class="form-actions">
             <button class="btn btn-secondary sm" type="button" id="btn-cancel-create">Cancel</button>
-            <button class="btn btn-primary sm" type="submit">Summon Companion ✨</button>
+            <button class="btn btn-primary sm" id="btn-submit-create" type="submit">Summon Companion ✨</button>
           </div>
         </form>
       </div>

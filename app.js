@@ -10,6 +10,8 @@
   const $$ = (sel) => [...document.querySelectorAll(sel)];
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  const MAX_AGENTS = 5;
+
   // --- Companions Data Model ---
   const companions = {
     atlas: {
@@ -48,9 +50,9 @@
       story:
         'Auditing the exponential backoff algorithm to ensure retry storms do not overwhelm backend services during brief outages.',
       workStream: [
-        ['Simulating network jitter', 'Testing transient connection drops across 3 retry attempts', 'investigating'],
-        ['Validating socket teardown', 'Ensuring no hanging socket leaks on 503 errors', 'making progress'],
-        ['Running regression suite', 'Executing 18 edge-case network checks', 'almost there']
+        ['Simulating network jitter', 'Testing transient connection drops across 3 retry attempts', 'investigating network drops'],
+        ['Validating socket teardown', 'Ensuring no hanging socket leaks on 503 errors', 'making steady progress'],
+        ['Running regression suite', 'Executing 18 edge-case network checks', 'almost at the finish line']
       ],
       plan: ['Inspect algorithm', 'Simulate jitter', 'Verify 3 attempts ceiling'],
       pinnedNotes: [],
@@ -201,7 +203,40 @@
     setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
   });
 
-  // --- Render Meadow Grid ---
+  // --- Agent Limit UI Synchronizer ---
+  function updateAgentLimitUI() {
+    const currentCount = Object.keys(companions).length;
+    const countEl = $('#active-agents-count');
+    const barEl = $('#summary-bar-fill');
+    const createBtn = $('#btn-create-agent-toggle');
+    const limitNotice = $('#create-limit-notice');
+    const submitBtn = $('#btn-submit-create');
+
+    if (countEl) countEl.textContent = currentCount;
+    if (barEl) barEl.style.width = `${Math.min(100, (currentCount / MAX_AGENTS) * 100)}%`;
+
+    if (currentCount >= MAX_AGENTS) {
+      if (createBtn) {
+        createBtn.disabled = true;
+        createBtn.classList.add('is-disabled');
+        createBtn.title = `Workspace limit reached (${currentCount}/${MAX_AGENTS} agents). Revoke an existing agent in Developer Keys to summon a new one.`;
+        createBtn.innerHTML = `<span>Limit Reached (${currentCount}/${MAX_AGENTS})</span>`;
+      }
+      if (limitNotice) limitNotice.style.display = 'block';
+      if (submitBtn) submitBtn.disabled = true;
+    } else {
+      if (createBtn) {
+        createBtn.disabled = false;
+        createBtn.classList.remove('is-disabled');
+        createBtn.title = `Summon a new companion (${currentCount}/${MAX_AGENTS})`;
+        createBtn.innerHTML = `+ Create agent`;
+      }
+      if (limitNotice) limitNotice.style.display = 'none';
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  }
+
+  // --- Render Meadow Grid (Centering Letters Perfectly) ---
   function renderMeadow() {
     const grid = $('#meadow-grid');
     const compList = Object.values(companions);
@@ -247,7 +282,7 @@
           moodClass = 'mood-ready';
           moodText = 'Gift Ready to Open!';
         } else if (c.state === 'paused') {
-          badgeHtml = `<div class="slot-badge-icon" aria-hidden="true">☾</div>`;
+          badgeHtml = `<div class="slot-badge-icon" aria-hidden="true">☕</div>`;
           moodClass = 'mood-paused';
           moodText = 'Resting with Tea';
         } else {
@@ -256,12 +291,12 @@
           moodText = 'Mission Celebrated';
         }
 
+        // NOTE: Strictly centered initials without any distracting secondary elements
         return `
           <button class="meadow-slot ${isSelected ? 'is-selected' : ''}" data-agent="${c.id}" role="tab" aria-selected="${isSelected}" type="button">
             ${badgeHtml}
             <div class="slot-avatar ${c.avatarClass || 'avatar-atlas'}">
               <span class="slot-initials">${c.initials}</span>
-              <span class="mini-halo" aria-hidden="true"></span>
             </div>
             <div class="slot-info">
               <span class="slot-name">${c.name}</span>
@@ -273,15 +308,15 @@
       })
       .join('');
 
-    // Update Counts
-    const totalCount = compList.length;
-    $('#active-agents-count').textContent = totalCount;
+    // Update Counts & Alert Badges
     const pendingCount = compList.filter((c) => c.state === 'asking').length;
     const alertEl = $('#activity-alert-count');
     if (alertEl) {
       alertEl.textContent = pendingCount;
       alertEl.style.display = pendingCount > 0 ? 'inline-grid' : 'none';
     }
+
+    updateAgentLimitUI();
   }
 
   // --- Render Active Companion Workbench ---
@@ -294,7 +329,7 @@
     $('#wb-avatar').textContent = c.initials;
     $('#wb-name').textContent = c.name;
     $('#wb-role').textContent = `${c.role} · ${c.roleType}`;
-    $('#wb-task-desc').textContent = `Task: ${c.task}`;
+    $('#wb-task-desc').textContent = `Working on: ${c.task}`;
 
     // Update Autonomy Dial
     $$('.dial-pill').forEach((pill) => {
@@ -303,33 +338,32 @@
       pill.setAttribute('aria-checked', String(isLevel));
     });
 
-    // Update Bot Scene
+    // Update Bot Scene & Facial State
     $('#scene').dataset.agent = c.id;
     $('#scene').dataset.state = c.state;
     $('#bot').setAttribute('aria-label', `Tap ${c.name} for a friendly greeting`);
     $('#stage-prop').textContent =
-      c.state === 'asking' ? '✉' : c.state === 'working' ? '⚙' : c.state === 'review' ? '🎁' : c.state === 'paused' ? '☾' : '✿';
+      c.state === 'asking' ? '✉' : c.state === 'working' ? '⚙' : c.state === 'review' ? '🎁' : c.state === 'paused' ? '☕' : '🏆';
 
-    // Thought Cloud Text
+    // Thought Cloud Text with Life & Personality
     if (c.state === 'asking') {
       $('#cloud-text').textContent = 'waiting for your stamp!';
     } else if (c.state === 'working') {
       const currentStep = c.workStream ? c.workStream[c.workIndex]?.[2] || 'building' : 'building';
       $('#cloud-text').textContent = currentStep;
     } else if (c.state === 'review') {
-      $('#cloud-text').textContent = 'gift ready for you!';
+      $('#cloud-text').textContent = 'gift ready for you! 🎁';
     } else if (c.state === 'paused') {
-      $('#cloud-text').textContent = 'resting peacefully';
+      $('#cloud-text').textContent = 'zzz... resting with warm tea ☕';
     } else {
-      $('#cloud-text').textContent = 'happy to help!';
+      $('#cloud-text').textContent = 'mission celebrated! ✨';
     }
 
     // Render Dynamic Right Artifact
     renderArtifactStage(c);
-    renderMeadow();
   }
 
-  // --- Render the Dynamic Workbench Artifact ---
+  // --- Render Dynamic Right Artifact ---
   function renderArtifactStage(c) {
     const stageEl = $('#artifact-stage');
 
@@ -396,6 +430,7 @@
           c.state = 'working';
           c.workIndex = 0;
           renderWorkbench();
+          renderMeadow();
           startCompanionWork(c);
         }, 650);
       };
@@ -433,7 +468,7 @@
               <span>💭 Whisper Advice</span>
             </button>
             <button class="btn btn-secondary sm" id="btn-pause-stream" type="button">
-              <span>⏸ Pause Companion</span>
+              <span>☕ Send on Break (Sleep)</span>
             </button>
           </div>
         </div>
@@ -451,7 +486,8 @@
         clearInterval(c.timer);
         c.timer = null;
         renderWorkbench();
-        showToast(`${c.name} paused to take a quick breather.`, '☕');
+        renderMeadow();
+        showToast(`${c.name} is resting with tea. Notice their sleeping face! ☕`, '😴');
       };
       return;
     }
@@ -487,6 +523,7 @@
         awardPoints(50, `Accepted and merged ${c.name}'s verified contribution`);
         c.state = 'done';
         renderWorkbench();
+        renderMeadow();
       };
 
       $('#btn-whisper-gift').onclick = () => {
@@ -498,15 +535,15 @@
       return;
     }
 
-    // STATE D: RESTING TEA LOUNGE (PAUSED)
+    // STATE D: RESTING TEA LOUNGE (PAUSED / SLEEPING)
     if (c.state === 'paused') {
       stageEl.innerHTML = `
         <div class="peaceful-card">
           <div class="peaceful-emoji" aria-hidden="true">☕</div>
-          <h3 class="peaceful-title">${c.name} is resting peacefully</h3>
-          <p class="peaceful-desc">${c.story || 'Taking a mindful pause between builds.'}</p>
+          <h3 class="peaceful-title">${c.name} is sleeping peacefully</h3>
+          <p class="peaceful-desc">${c.story || 'Taking a cozy pause between builds with a cup of warm tea.'}</p>
           <button class="btn btn-primary" id="btn-resume-work" type="button">
-            <span>🌿 Resume with a warm cup of coffee</span>
+            <span>⚡ Wake Up & Resume Tasks</span>
           </button>
         </div>
       `;
@@ -514,8 +551,9 @@
       $('#btn-resume-work').onclick = () => {
         c.state = 'working';
         renderWorkbench();
+        renderMeadow();
         startCompanionWork(c);
-        showToast(`${c.name} resumed work with fresh energy!`, '⚡');
+        showToast(`${c.name} woke up with fresh energy and started working!`, '⚡');
       };
       return;
     }
@@ -536,6 +574,7 @@
       c.state = 'asking';
       c.workIndex = 0;
       renderWorkbench();
+      renderMeadow();
       showToast(`${c.name} is ready for their next blueprint!`, '📜');
     };
   }
@@ -556,7 +595,7 @@
       }
 
       if (companion.id === activeId) renderWorkbench();
-      else renderMeadow();
+      renderMeadow();
     }, 4500);
   }
 
@@ -565,6 +604,7 @@
     if (!companions[id]) return;
     activeId = id;
     renderWorkbench();
+    renderMeadow();
 
     clearTimeout(switchTimer);
     $('#scene').classList.remove('switching');
@@ -622,7 +662,7 @@
     });
   });
 
-  // --- Sticky Note Whispers Modal Actions ---
+  // --- Sticky Note Whispers Modal Actions (Normal font, no cursive) ---
   $('#btn-cancel-whisper').onclick = () => $('#modal-whisper').close();
 
   $('#btn-send-whisper').onclick = () => {
@@ -703,8 +743,12 @@
   $('#btn-audit-toggle').onclick = openAuditModal;
   $('#btn-close-audit').onclick = () => $('#modal-audit').close();
 
-  // --- Summon a New Companion Modal ---
+  // --- Summon a New Companion Modal (With 5-limit check) ---
   $('#btn-create-agent-toggle').onclick = () => {
+    if (Object.keys(companions).length >= MAX_AGENTS) {
+      showToast(`Workspace limit reached (5/5). Revoke an agent in Developer Keys to free a slot.`, '⚠️');
+      return;
+    }
     $('#form-create-agent').reset();
     $('#modal-create-agent').showModal();
   };
@@ -714,6 +758,12 @@
 
   $('#form-create-agent').onsubmit = (e) => {
     e.preventDefault();
+    if (Object.keys(companions).length >= MAX_AGENTS) {
+      showToast(`Cannot add agent: 5/5 workspace limit has been met.`, '⚠️');
+      $('#modal-create-agent').close();
+      return;
+    }
+
     const name = $('#new-agent-name').value.trim();
     if (!name) return;
 
@@ -749,6 +799,7 @@
     burstConfetti(window.innerWidth / 2, window.innerHeight / 2, 60);
     awardPoints(25, `Summoned ${name} as a new companion!`);
     selectCompanion(id);
+    renderMeadow();
     showToast(`Welcome ${name} to your live team meadow!`, '✨');
   };
 
@@ -767,9 +818,11 @@
     }, 1100);
   });
 
-  // --- Eye Tracking Following Cursor ---
+  // --- Eye Tracking Following Cursor (Only when not sleeping) ---
   if (!reduce) {
     window.addEventListener('pointermove', (e) => {
+      const c = activeCompanion();
+      if (c && c.state === 'paused') return; // Closed eyes when sleeping!
       const box = $('#bot').getBoundingClientRect();
       const x = (e.clientX - box.left - box.width / 2) / box.width;
       const y = (e.clientY - box.top - box.height / 2) / box.height;
@@ -778,7 +831,7 @@
     });
   }
 
-  // --- Quiet Developer Drawer ---
+  // --- Quiet Developer Drawer with Revoke / Delete Actions ---
   function renderDevKeys() {
     const keysGrid = $('#keys-grid');
     keysGrid.innerHTML = Object.values(companions)
@@ -789,7 +842,10 @@
             <div class="key-owner">${c.name} (${c.roleType})</div>
             <div class="key-token">${c.key}</div>
           </div>
-          <button class="btn btn-secondary sm copy-dev-key" data-key="${c.key}" type="button">Copy</button>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-secondary sm copy-dev-key" data-key="${c.key}" type="button">Copy</button>
+            <button class="btn btn-secondary sm delete-dev-key" data-agent="${c.id}" type="button" style="color:#ef4444;" title="Revoke this agent and free a workspace slot">Revoke</button>
+          </div>
         </div>
       `
       )
@@ -802,6 +858,26 @@
         btn.textContent = 'Copied!';
         showToast(`Developer key copied!`, '📋');
         setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+      };
+    });
+
+    $$('.delete-dev-key').forEach((btn) => {
+      btn.onclick = () => {
+        const agentId = btn.dataset.agent;
+        if (Object.keys(companions).length <= 1) {
+          showToast(`Must keep at least 1 companion in workspace.`, '⚠️');
+          return;
+        }
+        const agentName = companions[agentId]?.name || 'Agent';
+        delete companions[agentId];
+        if (activeId === agentId) {
+          activeId = Object.keys(companions)[0];
+        }
+        updateAgentLimitUI();
+        renderMeadow();
+        renderWorkbench();
+        renderDevKeys();
+        showToast(`${agentName} revoked. Workspace slot freed up!`, '🗑️');
       };
     });
   }
