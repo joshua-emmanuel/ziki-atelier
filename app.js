@@ -838,13 +838,18 @@
       .map(
         (c) => `
         <div class="key-card">
-          <div>
-            <div class="key-owner">${c.name} (${c.roleType})</div>
-            <div class="key-token">${c.key}</div>
+          <div class="key-card-head">
+            <div class="key-owner-wrap">
+              <span class="key-owner-name">${c.name}</span>
+              <span class="key-role-badge">${c.roleType}</span>
+            </div>
+            <div class="key-actions">
+              <button class="btn btn-secondary sm copy-dev-key" data-key="${c.key}" type="button">Copy</button>
+              <button class="btn btn-secondary sm btn-revoke delete-dev-key" data-agent="${c.id}" type="button" title="Revoke this agent and free a workspace slot">Revoke</button>
+            </div>
           </div>
-          <div style="display:flex; gap:6px;">
-            <button class="btn btn-secondary sm copy-dev-key" data-key="${c.key}" type="button">Copy</button>
-            <button class="btn btn-secondary sm delete-dev-key" data-agent="${c.id}" type="button" style="color:#ef4444;" title="Revoke this agent and free a workspace slot">Revoke</button>
+          <div class="key-token-box">
+            <code class="key-token">${c.key}</code>
           </div>
         </div>
       `
